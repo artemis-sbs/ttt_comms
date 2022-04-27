@@ -2,10 +2,11 @@ from random import randrange
 
 from board import *
 import sbs
-from lib.sbs_utils.spaceobject import SpaceObject
+from lib.sbs_utils.spaceobject import SpaceObject, MSpawnPlayer, MSpawnActive
 from lib.sbs_utils.tickdispatcher import TickDispatcher
 from lib.sbs_utils.playership import PlayerShip
 from lib.sbs_utils.consoledispatcher import ConsoleDispatcher
+from lib.sbs_utils.consoledispatcher import MCommunications
 
 
 class TicTacToe:
@@ -35,7 +36,7 @@ class TicTacToe:
 		return s
 
 
-class Station(SpaceObject):
+class Station(SpaceObject, MSpawnActive):
 	count = 0
 
 	def __init__(self):
@@ -45,40 +46,27 @@ class Station(SpaceObject):
 
 		eyeY = randrange(1, 6)
 		mouthY = randrange(1, 6)
-		self.face = f"ska #fff 0 0;ska #fff 0 {eyeY};ska #fff 2 {mouthY};"
+		self.face_desc = f"ska #fff 0 0;ska #fff 0 {eyeY};ska #fff 2 {mouthY};"
 
 	def spawn(self, sim):
-		# playerID will be a NUMBER, a unique value for every space object that you create.
-		ship = self.make_new_active(sim, "behav_station", "Starbase")
-				
-		sim.reposition_space_object(ship, -500, 0, self.num * 400)
-		blob = ship.data_set
-		blob.set("name_tag", f"DS{Station.count}", 0)
-		ship.side = "TTT"
+		super().spawn(sim, -500,0,self.num * 400,f"DS{Station.count}","TSN", "Starbase", "behav_station" )
 
 
-class Player(PlayerShip):
+class Player(PlayerShip, MSpawnPlayer, MCommunications):
 	def __init__(self):
 		pass
 
 	def spawn(self, sim):
 		# playerID will be a NUMBER, a unique value for every space object that you create.
-		ship = self.make_new_player(sim, "behav_playership", "Battle Cruiser")
-		blob = ship.data_set
-		blob.set("name_tag", f"Artemis", 0)
-		ship.side = "TTT"
-		self.face = "ter white 0 0;ter #fff 5 2;ter #fff 6 3 -3 2;ter white 0 0;ter #fff 5 2;ter white 0 0;ter #fff 5 2;"
-		self.on_comms_message(self._comms_message)
-		self.on_comms_select(self._comms_select)
+		super().spawn(sim,0,0,0, "Artemis", "TSN", "Battle Cruiser")
+		self.enable_comms("ter white 0 0;ter #fff 5 2;ter #fff 6 3 -3 2;ter white 0 0;ter #fff 5 2;ter white 0 0;ter #fff 5 2;")
 		# Just an example every 5 seconds call on_tick
 		TickDispatcher.do_interval(sim, self._tick, 5)
-		blob = ship.data_set
-		blob.set("name_tag", "Artemis", 0)
 
 	def _tick(self, sim, task):
 		print("Example delayed tick")
 
-	def _comms_message(self, sim, message, other_id):
+	def comms_message(self, sim, message, other_id):
 		stat: Station = SpaceObject.get_as(other_id, Station)
 		if stat is None:
 			return
@@ -94,7 +82,7 @@ class Player(PlayerShip):
 		# Have to repaint thee buttons
 		self.show_comms_ttt(sim, other_id)
 
-	def _comms_select(self, sim, other_id):
+	def comms_selected(self, sim, other_id):
 		tempStr = f"Selected: {other_id}  (comms)"
 
 		sbs.send_message_to_player_ship(0, "green", tempStr)
@@ -123,17 +111,17 @@ class Player(PlayerShip):
 		render = TicTacToe.render(stat.b)
 		if stat.b.turn != Turn.X_TURN:
 			sbs.send_comms_message_to_player_ship(self.id, other_id, "green",
-											  self.face, 'Artemis > '+text,
+											  self.face_desc, 'Artemis > '+text,
 											  render,
 											  "player")
 		else:
 			sbs.send_comms_message_to_player_ship(self.id, other_id, "blue",
-											  stat.face, f'{text} > Artemis',
+											  stat.face_desc, f'{text} > Artemis',
 											  render,
 											  "Station")
 		print(render)
 		
-		sbs.send_comms_selection_info(self.id, stat.face, "pink", text)
+		sbs.send_comms_selection_info(self.id, stat.face_desc, "pink", text)
 		if stat.b.check_winner() != EndGame.UNKNOWN:
 			sbs.send_comms_button_info(self.id, "red", f"Replay", f"replay")
 
