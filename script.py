@@ -7,6 +7,7 @@ from lib.sbs_utils.tickdispatcher import TickDispatcher
 from lib.sbs_utils.playership import PlayerShip
 from lib.sbs_utils.consoledispatcher import ConsoleDispatcher
 from lib.sbs_utils.consoledispatcher import MCommunications
+from lib.sbs_utils.handlerhooks import *
 
 
 class TicTacToe:
@@ -210,20 +211,3 @@ def HandlePresentGUIMessage(sim, message_tag, clientID):
 	# GuiDispatcher.on_message(sim, message_tag, clientID)
 	# and the GUI is found by ID
 
-
-def HandleSimulationTick(sim):
-	TickDispatcher.dispatch_tick(sim)
-
-
-def HandleClientConnect(sim, clientID):
-	pass
-
-
-def HandleConsoleObjectSelection(sim, console_type, obj_selected_id, console_ship_id):
-	ConsoleDispatcher.dispatch_select(
-		sim, console_ship_id, console_type, obj_selected_id)
-
-
-def HandleCommsButton(sim, message_tag, comms_ship_id, obj_selected_id):
-	ConsoleDispatcher.dispatch_comms_message(
-		sim, message_tag, comms_ship_id, obj_selected_id)
