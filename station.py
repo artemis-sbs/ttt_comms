@@ -4,7 +4,7 @@ from board import *
 from lib.sbs_utils.spaceobject import SpaceObject, MSpawnActive
 from lib.sbs_utils.consoledispatcher import MCommunications
 from lib.sbs_utils.tickdispatcher import TickDispatcher
-from lib.sbs_utils.faces import Faces
+import lib.sbs_utils.faces as faces
 
 
 class TicTacToe:
@@ -41,7 +41,7 @@ class Station(SpaceObject, MSpawnActive, MCommunications):
         Station.count += 1
         self.b = Board()
 
-        self.face_desc = Faces.random_skaraan()
+        self.face_desc = faces.random_skaraan()
 
     def spawn(self, sim):
         super().spawn(sim, -500, 0, self.num * 400,
@@ -91,6 +91,7 @@ class Station(SpaceObject, MSpawnActive, MCommunications):
         print(render)
 
         sbs.send_comms_selection_info(player_id, self.face_desc, "pink", station_text)
+        #sbs.send_comms_selection_info(player_id, faces.random_torgoth(), "pink", station_text)
         if self.b.check_winner() != EndGame.UNKNOWN:
             sbs.send_comms_button_info(player_id, "red", f"Replay", f"replay")
 
