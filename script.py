@@ -39,7 +39,6 @@ class GuiMain:
 class Mission:
 	main = GuiMain()
 	player = Player()
-	stations = []
 
 	def start(sim):
 		Mission.player.spawn(sim)
