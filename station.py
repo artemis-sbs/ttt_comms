@@ -12,29 +12,37 @@ class TicTacToe:
         state = b.check_winner()
         s = ''
         match state:
-            case EndGame.UNKNOWN:
-                for index, p in enumerate(b.grid):
-                    match p:
-                        case Turn.X_TURN:
-                            s += "X "
-                        case Turn.O_TURN:
-                            s += "O "
-                        case _:
-                            s += f'. '
-
-                    if (index % 3) == 2:
-                        s += ' :  '
             case EndGame.X_WINS:
-                s = "X Wins"
+                s = "X Wins^^"
             case EndGame.O_WINS:
-                s = "O Wins"
+                s = "O Wins^^"
             case EndGame.DRAW:
-                s = "Draw"
+                s = "Draw^^"
+            case _:
+                if b.turn == Turn.X_TURN:
+                    s = "X-TURN^^"
+                else:
+                    s = "O-TURN^^"
+
+        
+        for index, p in enumerate(b.grid):
+            match p:
+                case Turn.X_TURN:
+                    s += "X "
+                case Turn.O_TURN:
+                    s += "O "
+                case _:
+                    s += f'. '
+
+            if (index % 3) == 2:
+                s += '^^'
+
         return s
 
 
 class Station(SpaceObject, MSpawnActive, MCommunications):
     count = 0
+    first_contact = True
 
     def __init__(self):
         self.num = Station.count
@@ -48,6 +56,8 @@ class Station(SpaceObject, MSpawnActive, MCommunications):
                       f"DS{Station.count}", "TSN", "Starbase", "behav_station")
         self.enable_comms(self.face_desc)
 
+        
+
     def comms_message(self, sim, message, other_id):
         match message:
             case 'replay':
@@ -59,14 +69,16 @@ class Station(SpaceObject, MSpawnActive, MCommunications):
 
         # Have to repaint thee buttons
         self.show_comms_ttt(sim, other_id)
-
+        
     def comms_selected(self, sim, player_id):
         tempStr = f"Selected: {self.id}  (comms)"
 
         sbs.send_message_to_player_ship(player_id, "green", tempStr)
 
         # this sends data about who the comms officer is talking to now
-        self.show_comms_ttt(sim, player_id)
+        if self.first_contact:
+            self.show_comms_ttt(sim, player_id)
+            self.first_contact = False
 
     def show_comms_ttt(self, sim, player_id):
         player_so = SpaceObject.get(player_id)
